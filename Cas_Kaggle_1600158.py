@@ -401,3 +401,215 @@ Dataset_canvis = Dataset_canvis.rename({0: 'no_Romantic', 1: 'yes_Romantic'}, ax
 
 Dataset_canvis.drop('romantic', axis='columns', inplace=True)
 
+
+# # Variable Objectiu:
+
+# In[56]:
+
+
+X_sense_G = Dataset_canvis.copy()
+X_sense_G = X_sense_G.drop(['G1','G2','G3'], axis=1)
+
+X_amb_G = Dataset_canvis.copy()
+X_amb_G = X_amb_G.drop(['G3'], axis=1)
+
+y = Dataset_canvis.copy()
+y = y[['G3']]
+
+
+# In[57]:
+
+
+X_sense_G_train_FS, X_sense_G_test_FS, y_sense_G_train_FS, y_sense_G_test_FS = train_test_split(X_sense_G,y,test_size=0.3,random_state = 42)
+
+
+# In[58]:
+
+
+X_sense_G_train_FS = StandardScaler().fit_transform(X_sense_G_train_FS)
+
+
+# In[59]:
+
+
+X_amb_G_train_FS, X_amb_G_test_FS, y_amb_G_train_FS, y_amb_G_test_FS = train_test_split(X_amb_G,y,test_size=0.3,random_state = 42)
+
+
+# In[60]:
+
+
+X_amb_G_train_FS = StandardScaler().fit_transform(X_amb_G_train_FS)
+
+
+# # Feature Selection:
+
+# ## Regressió Lasso:
+
+# In[61]:
+
+
+Lasso = Lasso()
+
+
+# In[62]:
+
+
+cerca_alpha_lasso = GridSearchCV(Lasso, {'alpha':np.arange(0.1,10,0.1)}, cv = 5, scoring="neg_mean_squared_error")
+
+
+# ### Cerca de millors paràmetres sense G1 i G2:
+
+# In[63]:
+
+
+cerca_alpha_lasso.fit(X_sense_G_train_FS, y_sense_G_train_FS.values.ravel())
+
+
+# In[64]:
+
+
+print("Resultats Grid Search: \n")
+print("Millor estimador dels paràmetres buscats: \n", cerca_alpha_lasso.best_estimator_)
+print("Millor score dels paràmetres: \n", cerca_alpha_lasso.best_score_)
+print("Millors paràmetres: \n", cerca_alpha_lasso.best_params_)
+
+
+# In[65]:
+
+
+coefs_sense_G = cerca_alpha_lasso.best_estimator_.coef_
+importancia_sense_G = np.abs(coefs_sense_G)
+importancia_sense_G
+
+
+# In[66]:
+
+
+X_sense_G = Dataset_canvis[np.array(X_sense_G.columns)[importancia_sense_G > 0].tolist()]
+
+
+# In[67]:
+
+
+correlacio_X_sense_G = X_sense_G.corr()
+
+plt.figure(figsize = (20,16))
+
+ax = sns.heatmap(correlacio_X_sense_G, annot=True, linewidths=.5)
+
+
+# In[68]:
+
+
+X_sense_G = X_sense_G.drop(['no_Paid'], axis=1)
+
+
+# In[69]:
+
+
+correlacio_X_sense_G = X_sense_G.corr()
+
+plt.figure(figsize = (20,16))
+
+ax = sns.heatmap(correlacio_X_sense_G, annot=True, linewidths=.5)
+
+
+# ### Cerca de millors paràmetres amb G1 i G2:
+
+# In[70]:
+
+
+cerca_alpha_lasso.fit(X_amb_G_train_FS, y_amb_G_train_FS.values.ravel())
+
+
+# In[71]:
+
+
+print("Resultats Grid Search: \n")
+print("Millor estimador dels paràmetres buscats: \n", cerca_alpha_lasso.best_estimator_)
+print("Millor score dels paràmetres: \n", cerca_alpha_lasso.best_score_)
+print("Millors paràmetres: \n", cerca_alpha_lasso.best_params_)
+
+
+# In[72]:
+
+
+coefs_amb_G = cerca_alpha_lasso.best_estimator_.coef_
+importancia_amb_G = np.abs(coefs_amb_G)
+importancia_amb_G
+
+
+# In[73]:
+
+
+X_amb_G = Dataset_canvis[np.array(X_amb_G.columns)[importancia_amb_G > 0].tolist()]
+
+
+# In[74]:
+
+
+correlacio_X_amb_G = X_amb_G.corr()
+
+plt.figure(figsize = (20,16))
+
+ax = sns.heatmap(correlacio_X_amb_G, annot=True, linewidths=.5)
+
+
+# In[75]:
+
+
+X_amb_G = X_amb_G.drop(['no_Schoolsup', 'no_Paid', 'no_Activities', 'no_Romantic', 'other_Fjob', 'no_Higher','G1'], axis=1)
+
+
+# In[76]:
+
+
+correlacio_X_amb_G = X_amb_G.corr()
+
+plt.figure(figsize = (20,16))
+
+ax = sns.heatmap(correlacio_X_amb_G, annot=True, linewidths=.5)
+
+
+# ## Regressió RandomForest
+
+# In[77]:
+
+
+rf = RandomForestRegressor(random_state=0)
+
+
+# In[78]:
+
+
+grid_param = {
+    'n_estimators':np.arange(80,150,10),
+    'criterion':['squared_error','absolute_error','poisson'],
+    'max_depth': np.arange(2,20,1), 
+    'min_samples_leaf': np.arange(1,10,1),
+    'min_samples_split': np.arange(2,10,1),
+    'max_features':['sqrt', 'log2', 'auto', 1.0]
+}
+
+
+# In[79]:
+
+
+cerca_params_rf = GridSearchCV(rf, grid_param, cv=5, n_jobs=-1, scoring = "neg_mean_squared_error")
+
+
+# ### Cerca de millors paràmetres sense G1 i G2:
+
+# In[80]:
+
+
+#cerca_params_rf.fit(X_sense_G_train, y_sense_G_train.values.ravel())
+
+
+# ### Cerca de millors paràmetres amb G1 i G2:
+
+# In[81]:
+
+
+#cerca_params_rf.fit(X_amb_G_train_SS, y_amb_G_train.values.ravel())
+
