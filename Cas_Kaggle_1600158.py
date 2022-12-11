@@ -613,3 +613,97 @@ cerca_params_rf = GridSearchCV(rf, grid_param, cv=5, n_jobs=-1, scoring = "neg_m
 
 #cerca_params_rf.fit(X_amb_G_train_SS, y_amb_G_train.values.ravel())
 
+
+# ## Regressions:
+
+# In[82]:
+
+
+X_sense_G_train, X_sense_G_test, y_sense_G_train, y_sense_G_test = train_test_split(X_sense_G,y,test_size=0.3,random_state = 42)
+
+
+# In[83]:
+
+
+X_sense_G_train = StandardScaler().fit_transform(X_sense_G_train)
+X_sense_G_test = StandardScaler().fit_transform(X_sense_G_test)
+
+
+# In[84]:
+
+
+X_amb_G_train, X_amb_G_test, y_amb_G_train, y_amb_G_test = train_test_split(X_amb_G,y,test_size=0.3,random_state = 4)
+
+
+# In[85]:
+
+
+X_amb_G_train = StandardScaler().fit_transform(X_amb_G_train)
+X_amb_G_test = StandardScaler().fit_transform(X_amb_G_test)
+
+
+# ### Regressió linial sense G1 ni G2:
+
+# In[86]:
+
+
+LinReg = LinearRegression()
+
+
+# In[87]:
+
+
+LinReg.fit(X_sense_G_train, y_sense_G_train)
+
+
+# In[88]:
+
+
+Pred_LinReg_sense_G = LinReg.predict(X_sense_G_test)
+
+
+# In[89]:
+
+
+# Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
+plt.figure()
+ax = plt.scatter(y_sense_G_test, Pred_LinReg_sense_G)
+plt.ylabel("Valors predits")
+plt.xlabel("Valors reals")
+# Mostrem l'error (MSE i R2)
+MSE_LinReg_sense_G = mean_squared_error(y_sense_G_test, Pred_LinReg_sense_G)
+r2_LinReg_sense_G = r2_score(y_sense_G_test, Pred_LinReg_sense_G)
+
+print("Mean squeared error: ", MSE_LinReg_sense_G)
+print("R2 score: ", r2_LinReg_sense_G)
+
+
+# ### Regressió linial amb G1 i G2:
+
+# In[90]:
+
+
+LinReg.fit(X_amb_G_train, y_amb_G_train)
+
+
+# In[91]:
+
+
+Pred_LinReg_amb_G = LinReg.predict(X_amb_G_test)
+
+
+# In[92]:
+
+
+# Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
+plt.figure()
+ax = plt.scatter(y_amb_G_test, Pred_LinReg_amb_G)
+plt.ylabel("Valors predits")
+plt.xlabel("Valors reals")
+# Mostrem l'error (MSE i R2)
+MSE_LinReg_amb_G = mean_squared_error(y_amb_G_test, Pred_LinReg_amb_G)
+r2_LinReg_amb_G = r2_score(y_amb_G_test, Pred_LinReg_amb_G)
+
+print("Mean squeared error: ", MSE_LinReg_amb_G)
+print("R2 score: ", r2_LinReg_amb_G)
+
