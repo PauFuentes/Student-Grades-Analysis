@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[161]:
+# In[ ]:
 
 
 import math
@@ -17,10 +17,11 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder, normalize
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import Lasso, LinearRegression, BayesianRidge
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import cross_val_predict,GridSearchCV,StratifiedKFold,LeaveOneOut,cross_val_score,train_test_split
+from sklearn.model_selection import cross_val_predict,GridSearchCV, ShuffleSplit, KFold,LeaveOneOut,cross_val_score,train_test_split
 from sklearn.feature_selection import RFECV
 from catboost import CatBoostRegressor
 from xgboost.sklearn import XGBRegressor
+from imblearn.over_sampling import SMOTE
 import time
 #from bayes_opt import BayesianOptimization, UtilityFunction
 
@@ -28,19 +29,19 @@ import time
 dataset = pd.read_csv("/home/pau/Desktop/Tercer Curs/Primer Semestre/AComp/Cas_Kaggle/student-mat.csv", header=0, delimiter=',')
 
 
-# In[2]:
+# In[ ]:
 
 
 dataset.isnull().sum()
 
 
-# In[3]:
+# In[ ]:
 
 
 Dataset_canvis = dataset.copy()
 
 
-# In[4]:
+# In[ ]:
 
 
 encoder = OneHotEncoder(handle_unknown='ignore')
@@ -50,20 +51,20 @@ encoder = OneHotEncoder(handle_unknown='ignore')
 
 # ## School
 
-# In[5]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['school']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[6]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'GP_School', 1: 'MS_School'}, axis='columns')
 
 
-# In[7]:
+# In[ ]:
 
 
 Dataset_canvis.drop('school', axis='columns', inplace=True)
@@ -71,20 +72,20 @@ Dataset_canvis.drop('school', axis='columns', inplace=True)
 
 # ## Sex
 
-# In[8]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['sex']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[9]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'Female_Sex', 1: 'Male_Sex'}, axis='columns')
 
 
-# In[10]:
+# In[ ]:
 
 
 Dataset_canvis.drop('sex', axis='columns', inplace=True)
@@ -92,20 +93,20 @@ Dataset_canvis.drop('sex', axis='columns', inplace=True)
 
 # ## Address
 
-# In[11]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['address']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[12]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'R_Address', 1: 'U_Address'}, axis='columns')
 
 
-# In[13]:
+# In[ ]:
 
 
 Dataset_canvis.drop('address', axis='columns', inplace=True)
@@ -113,20 +114,20 @@ Dataset_canvis.drop('address', axis='columns', inplace=True)
 
 # ## Famsize
 
-# In[14]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['famsize']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[15]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'GT3_Famsize', 1: 'LE3_Famsize'}, axis='columns')
 
 
-# In[16]:
+# In[ ]:
 
 
 Dataset_canvis.drop('famsize', axis='columns', inplace=True)
@@ -134,20 +135,20 @@ Dataset_canvis.drop('famsize', axis='columns', inplace=True)
 
 # ## Pstatus
 
-# In[17]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['Pstatus']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[18]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'A_Pstatus', 1: 'T_Pstatus'}, axis='columns')
 
 
-# In[19]:
+# In[ ]:
 
 
 Dataset_canvis.drop('Pstatus', axis='columns', inplace=True)
@@ -155,20 +156,20 @@ Dataset_canvis.drop('Pstatus', axis='columns', inplace=True)
 
 # ## Mjob
 
-# In[20]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['Mjob']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[21]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'at_home_Mjob', 1: 'health_Mjob', 2: 'other_Mjob', 3: 'services_Mjob', 4: 'teacher_Mjob' }, axis='columns')
 
 
-# In[22]:
+# In[ ]:
 
 
 Dataset_canvis.drop('Mjob', axis='columns', inplace=True)
@@ -176,20 +177,20 @@ Dataset_canvis.drop('Mjob', axis='columns', inplace=True)
 
 # ## Fjob
 
-# In[23]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['Fjob']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[24]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'at_home_Fjob', 1: 'health_Fjob', 2: 'other_Fjob', 3: 'services_Fjob', 4: 'teacher_Fjob' }, axis='columns')
 
 
-# In[25]:
+# In[ ]:
 
 
 Dataset_canvis.drop('Fjob', axis='columns', inplace=True)
@@ -197,20 +198,20 @@ Dataset_canvis.drop('Fjob', axis='columns', inplace=True)
 
 # ## Reason
 
-# In[26]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['reason']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[27]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'course_Reason', 1: 'home_Reason', 2: 'other_Reason', 3: 'reputation_Reason' }, axis='columns')
 
 
-# In[28]:
+# In[ ]:
 
 
 Dataset_canvis.drop('reason', axis='columns', inplace=True)
@@ -218,20 +219,20 @@ Dataset_canvis.drop('reason', axis='columns', inplace=True)
 
 # ## Guardian
 
-# In[29]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['guardian']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[30]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'father_Guardian', 1: 'mother_Guardian', 2: 'other_Guardian'}, axis='columns')
 
 
-# In[31]:
+# In[ ]:
 
 
 Dataset_canvis.drop('guardian', axis='columns', inplace=True)
@@ -239,20 +240,20 @@ Dataset_canvis.drop('guardian', axis='columns', inplace=True)
 
 # ## Schoolsup
 
-# In[32]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['schoolsup']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[33]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'no_Schoolsup', 1: 'yes_Schoolsup'}, axis='columns')
 
 
-# In[34]:
+# In[ ]:
 
 
 Dataset_canvis.drop('schoolsup', axis='columns', inplace=True)
@@ -260,20 +261,20 @@ Dataset_canvis.drop('schoolsup', axis='columns', inplace=True)
 
 # ## Famsup
 
-# In[35]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['famsup']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[36]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'no_Famsup', 1: 'yes_Famsup'}, axis='columns')
 
 
-# In[37]:
+# In[ ]:
 
 
 Dataset_canvis.drop('famsup', axis='columns', inplace=True)
@@ -281,20 +282,20 @@ Dataset_canvis.drop('famsup', axis='columns', inplace=True)
 
 # ## Paid
 
-# In[38]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['paid']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[39]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'no_Paid', 1: 'yes_Paid'}, axis='columns')
 
 
-# In[40]:
+# In[ ]:
 
 
 Dataset_canvis.drop('paid', axis='columns', inplace=True)
@@ -302,20 +303,20 @@ Dataset_canvis.drop('paid', axis='columns', inplace=True)
 
 # ## Activities
 
-# In[41]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['activities']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[42]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'no_Activities', 1: 'yes_Activities'}, axis='columns')
 
 
-# In[43]:
+# In[ ]:
 
 
 Dataset_canvis.drop('activities', axis='columns', inplace=True)
@@ -323,20 +324,20 @@ Dataset_canvis.drop('activities', axis='columns', inplace=True)
 
 # ## Nursery
 
-# In[44]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['nursery']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[45]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'no_Nursery', 1: 'yes_Nursery'}, axis='columns')
 
 
-# In[46]:
+# In[ ]:
 
 
 Dataset_canvis.drop('nursery', axis='columns', inplace=True)
@@ -344,20 +345,20 @@ Dataset_canvis.drop('nursery', axis='columns', inplace=True)
 
 # ## Higher
 
-# In[47]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['higher']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[48]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'no_Higher', 1: 'yes_Higher'}, axis='columns')
 
 
-# In[49]:
+# In[ ]:
 
 
 Dataset_canvis.drop('higher', axis='columns', inplace=True)
@@ -365,20 +366,20 @@ Dataset_canvis.drop('higher', axis='columns', inplace=True)
 
 # ## Internet
 
-# In[50]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['internet']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[51]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'no_Internet', 1: 'yes_Internet'}, axis='columns')
 
 
-# In[52]:
+# In[ ]:
 
 
 Dataset_canvis.drop('internet', axis='columns', inplace=True)
@@ -386,28 +387,40 @@ Dataset_canvis.drop('internet', axis='columns', inplace=True)
 
 # ## Romantic
 
-# In[53]:
+# In[ ]:
 
 
 encoder_df = pd.DataFrame(encoder.fit_transform(Dataset_canvis[['romantic']]).toarray())
 Dataset_canvis = Dataset_canvis.join(encoder_df)
 
 
-# In[54]:
+# In[ ]:
 
 
 Dataset_canvis = Dataset_canvis.rename({0: 'no_Romantic', 1: 'yes_Romantic'}, axis='columns')
 
 
-# In[55]:
+# In[ ]:
 
 
 Dataset_canvis.drop('romantic', axis='columns', inplace=True)
 
 
+# ## Distribució atribut G3:
+
+# In[ ]:
+
+
+plt.figure()
+plt.title("Histograma de l'atribut G3")
+plt.xlabel("Attribute Value")
+plt.ylabel("Count")
+hist = plt.hist(dataset['G3'], bins=11, range=[np.min(dataset['G3']), np.max(dataset['G3'])], histtype="bar", rwidth=0.8)
+
+
 # # Variable Objectiu:
 
-# In[56]:
+# In[ ]:
 
 
 X_sense_G = Dataset_canvis.copy()
@@ -417,28 +430,28 @@ X_amb_G = Dataset_canvis.copy()
 X_amb_G = X_amb_G.drop(['G3'], axis=1)
 
 y = Dataset_canvis.copy()
-y = y[['G3']]
+y = y['G3']
 
 
-# In[57]:
+# In[ ]:
 
 
 X_sense_G_train_FS, X_sense_G_test_FS, y_sense_G_train_FS, y_sense_G_test_FS = train_test_split(X_sense_G,y,test_size=0.3,random_state = 42)
 
 
-# In[58]:
+# In[ ]:
 
 
 X_sense_G_train_FS = StandardScaler().fit_transform(X_sense_G_train_FS)
 
 
-# In[59]:
+# In[ ]:
 
 
 X_amb_G_train_FS, X_amb_G_test_FS, y_amb_G_train_FS, y_amb_G_test_FS = train_test_split(X_amb_G,y,test_size=0.3,random_state = 42)
 
 
-# In[60]:
+# In[ ]:
 
 
 X_amb_G_train_FS = StandardScaler().fit_transform(X_amb_G_train_FS)
@@ -448,13 +461,13 @@ X_amb_G_train_FS = StandardScaler().fit_transform(X_amb_G_train_FS)
 
 # ## Regressió Lasso:
 
-# In[61]:
+# In[ ]:
 
 
 Lasso = Lasso()
 
 
-# In[62]:
+# In[ ]:
 
 
 cerca_alpha_lasso = GridSearchCV(Lasso, {'alpha':np.arange(0.1,10,0.1)}, cv = 5, scoring="neg_mean_squared_error")
@@ -462,13 +475,13 @@ cerca_alpha_lasso = GridSearchCV(Lasso, {'alpha':np.arange(0.1,10,0.1)}, cv = 5,
 
 # ### Cerca de millors paràmetres sense G1 i G2:
 
-# In[63]:
+# In[ ]:
 
 
 cerca_alpha_lasso.fit(X_sense_G_train_FS, y_sense_G_train_FS.values.ravel())
 
 
-# In[64]:
+# In[ ]:
 
 
 print("Resultats Grid Search: \n")
@@ -477,7 +490,7 @@ print("Millor score dels paràmetres: \n", cerca_alpha_lasso.best_score_)
 print("Millors paràmetres: \n", cerca_alpha_lasso.best_params_)
 
 
-# In[65]:
+# In[ ]:
 
 
 coefs_sense_G = cerca_alpha_lasso.best_estimator_.coef_
@@ -485,13 +498,13 @@ importancia_sense_G = np.abs(coefs_sense_G)
 importancia_sense_G
 
 
-# In[66]:
+# In[ ]:
 
 
 X_sense_G = Dataset_canvis[np.array(X_sense_G.columns)[importancia_sense_G > 0].tolist()]
 
 
-# In[67]:
+# In[ ]:
 
 
 correlacio_X_sense_G = X_sense_G.corr()
@@ -501,13 +514,13 @@ plt.figure(figsize = (20,16))
 ax = sns.heatmap(correlacio_X_sense_G, annot=True, linewidths=.5)
 
 
-# In[68]:
+# In[ ]:
 
 
 X_sense_G = X_sense_G.drop(['no_Paid'], axis=1)
 
 
-# In[69]:
+# In[ ]:
 
 
 correlacio_X_sense_G = X_sense_G.corr()
@@ -519,13 +532,13 @@ ax = sns.heatmap(correlacio_X_sense_G, annot=True, linewidths=.5)
 
 # ### Cerca de millors paràmetres amb G1 i G2:
 
-# In[70]:
+# In[ ]:
 
 
 cerca_alpha_lasso.fit(X_amb_G_train_FS, y_amb_G_train_FS.values.ravel())
 
 
-# In[71]:
+# In[ ]:
 
 
 print("Resultats Grid Search: \n")
@@ -534,7 +547,7 @@ print("Millor score dels paràmetres: \n", cerca_alpha_lasso.best_score_)
 print("Millors paràmetres: \n", cerca_alpha_lasso.best_params_)
 
 
-# In[72]:
+# In[ ]:
 
 
 coefs_amb_G = cerca_alpha_lasso.best_estimator_.coef_
@@ -542,13 +555,13 @@ importancia_amb_G = np.abs(coefs_amb_G)
 importancia_amb_G
 
 
-# In[73]:
+# In[ ]:
 
 
 X_amb_G = Dataset_canvis[np.array(X_amb_G.columns)[importancia_amb_G > 0].tolist()]
 
 
-# In[74]:
+# In[ ]:
 
 
 correlacio_X_amb_G = X_amb_G.corr()
@@ -558,13 +571,13 @@ plt.figure(figsize = (20,16))
 ax = sns.heatmap(correlacio_X_amb_G, annot=True, linewidths=.5)
 
 
-# In[75]:
+# In[ ]:
 
 
 X_amb_G = X_amb_G.drop(['no_Schoolsup', 'no_Paid', 'no_Activities', 'no_Romantic', 'other_Fjob', 'no_Higher','G1'], axis=1)
 
 
-# In[76]:
+# In[ ]:
 
 
 correlacio_X_amb_G = X_amb_G.corr()
@@ -576,13 +589,13 @@ ax = sns.heatmap(correlacio_X_amb_G, annot=True, linewidths=.5)
 
 # ## Regressió RandomForest
 
-# In[77]:
+# In[ ]:
 
 
 rf = RandomForestRegressor(random_state=0)
 
 
-# In[78]:
+# In[ ]:
 
 
 grid_param = {
@@ -595,7 +608,7 @@ grid_param = {
 }
 
 
-# In[79]:
+# In[ ]:
 
 
 cerca_params_rf = GridSearchCV(rf, grid_param, cv=5, n_jobs=-1, scoring = "neg_mean_squared_error")
@@ -603,7 +616,7 @@ cerca_params_rf = GridSearchCV(rf, grid_param, cv=5, n_jobs=-1, scoring = "neg_m
 
 # ### Cerca de millors paràmetres sense G1 i G2:
 
-# In[80]:
+# In[ ]:
 
 
 #cerca_params_rf.fit(X_sense_G_train, y_sense_G_train.values.ravel())
@@ -611,15 +624,15 @@ cerca_params_rf = GridSearchCV(rf, grid_param, cv=5, n_jobs=-1, scoring = "neg_m
 
 # ### Cerca de millors paràmetres amb G1 i G2:
 
-# In[81]:
+# In[ ]:
 
 
 #cerca_params_rf.fit(X_amb_G_train_SS, y_amb_G_train.values.ravel())
 
 
-# ## Regressions:
+# # Regressions:
 
-# In[184]:
+# In[ ]:
 
 
 Dic_MSE_Sense_G = {}
@@ -629,67 +642,67 @@ Dic_r2_Sense_G = {}
 Dic_r2_Amb_G = {}
 
 
-# In[82]:
+# In[ ]:
 
 
-X_sense_G_train, X_sense_G_test, y_sense_G_train, y_sense_G_test = train_test_split(X_sense_G,y,test_size=0.3,random_state = 42)
+X_sense_G_train, X_sense_G_test, y_sense_G_train, y_sense_G_test = train_test_split(X_sense_G,y,test_size=0.3,random_state = 23)
 
 
-# In[83]:
+# In[ ]:
 
 
 X_sense_G_train = StandardScaler().fit_transform(X_sense_G_train)
 X_sense_G_test = StandardScaler().fit_transform(X_sense_G_test)
 
 
-# In[84]:
+# In[ ]:
 
 
-X_amb_G_train, X_amb_G_test, y_amb_G_train, y_amb_G_test = train_test_split(X_amb_G,y,test_size=0.3,random_state = 4)
+X_amb_G_train, X_amb_G_test, y_amb_G_train, y_amb_G_test = train_test_split(X_amb_G,y,test_size=0.3,random_state = 50)
 
 
-# In[85]:
+# In[ ]:
 
 
 X_amb_G_train = StandardScaler().fit_transform(X_amb_G_train)
 X_amb_G_test = StandardScaler().fit_transform(X_amb_G_test)
 
 
-# ### Regressió linial sense G1 ni G2:
+# ## Regressió linial sense G1 ni G2:
 
-# In[86]:
+# In[ ]:
 
 
 LinReg = LinearRegression()
 
 
-# In[87]:
+# In[ ]:
 
 
 LinReg.fit(X_sense_G_train, y_sense_G_train)
 
 
-# In[88]:
+# In[ ]:
 
 
 Pred_LinReg_sense_G = LinReg.predict(X_sense_G_test)
 
 
-# ### Regressió linial amb G1 i G2:
+# ## Regressió linial amb G1 i G2:
 
-# In[90]:
+# In[ ]:
 
 
 LinReg.fit(X_amb_G_train, y_amb_G_train)
 
 
-# In[91]:
+# In[ ]:
 
 
 Pred_LinReg_amb_G = LinReg.predict(X_amb_G_test)
 
 
-# In[185]:
+# In[ ]:
 
 
 # Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
@@ -720,41 +733,41 @@ Dic_r2_Sense_G['LinReg'] = r2_LinReg_sense_G
 Dic_r2_Amb_G['LinReg'] = r2_LinReg_amb_G
 
 
-# ### SVR sense G1 i G2:
+# ## SVR sense G1 i G2:
 
-# In[94]:
+# In[ ]:
 
 
 Svr = SVR()
 
 
-# In[97]:
+# In[ ]:
 
 
 Svr.fit(X_sense_G_train, y_sense_G_train.values.ravel())
 
 
-# In[99]:
+# In[ ]:
 
 
 Pred_SVR_sense_G = Svr.predict(X_sense_G_test)
 
 
-# ### SVR amb G1 i G2:
+# ## SVR amb G1 i G2:
 
-# In[105]:
+# In[ ]:
 
 
 Svr.fit(X_amb_G_train, y_amb_G_train.values.ravel())
 
 
-# In[106]:
+# In[ ]:
 
 
 Pred_SVR_amb_G = Svr.predict(X_amb_G_test)
 
 
-# In[186]:
+# In[ ]:
 
 
 # Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
@@ -785,41 +798,41 @@ Dic_r2_Sense_G['SVR'] = r2_SVR_sense_G
 Dic_r2_Amb_G['SVR'] = r2_SVR_amb_G
 
 
-# ### BayesianRidge sense G1 i G2:
+# ## BayesianRidge sense G1 i G2:
 
-# In[110]:
+# In[ ]:
 
 
 BR = BayesianRidge()
 
 
-# In[112]:
+# In[ ]:
 
 
 BR.fit(X_sense_G_train, y_sense_G_train.values.ravel())
 
 
-# In[113]:
+# In[ ]:
 
 
 Pred_BR_sense_G = BR.predict(X_sense_G_test)
 
 
-# ### BayesianRidge amb G1 i G2:
+# ## BayesianRidge amb G1 i G2:
 
-# In[115]:
+# In[ ]:
 
 
 BR.fit(X_amb_G_train, y_amb_G_train.values.ravel())
 
 
-# In[116]:
+# In[ ]:
 
 
 Pred_BR_amb_G = BR.predict(X_amb_G_test)
 
 
-# In[187]:
+# In[ ]:
 
 
 # Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
@@ -850,41 +863,41 @@ Dic_r2_Sense_G['BR'] = r2_BR_sense_G
 Dic_r2_Amb_G['BR'] = r2_BR_amb_G
 
 
-# ### Regressió CatBoost sense G1 i G2:
+# ## Regressió CatBoost sense G1 i G2:
 
-# In[119]:
+# In[ ]:
 
 
 CBR = CatBoostRegressor()
 
 
-# In[123]:
+# In[ ]:
 
 
 CBR.fit(X_sense_G_train, y_sense_G_train.values.ravel(), verbose = False)
 
 
-# In[124]:
+# In[ ]:
 
 
 Pred_CBR_sense_G = CBR.predict(X_sense_G_test)
 
 
-# ### Regressió CatBoost amb G1 i G2:
+# ## Regressió CatBoost amb G1 i G2:
 
-# In[136]:
+# In[ ]:
 
 
 CBR.fit(X_amb_G_train, y_amb_G_train.values.ravel(), verbose = False)
 
 
-# In[137]:
+# In[ ]:
 
 
 Pred_CBR_amb_G = CBR.predict(X_amb_G_test)
 
 
-# In[188]:
+# In[ ]:
 
 
 # Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
@@ -915,41 +928,41 @@ Dic_r2_Sense_G['CBR'] = r2_CBR_sense_G
 Dic_r2_Amb_G['CBR'] = r2_CBR_amb_G
 
 
-# ### Regressió XGBoost sense G1 i G2:
+# ## Regressió XGBoost sense G1 i G2:
 
-# In[178]:
+# In[ ]:
 
 
 XGB = XGBRegressor()
 
 
-# In[179]:
+# In[ ]:
 
 
 XGB.fit(X_sense_G_train, y_sense_G_train)
 
 
-# In[180]:
+# In[ ]:
 
 
 Pred_XGB_sense_G = XGB.predict(X_sense_G_test)
 
 
-# ### Regressió XGBoost amb G1 i G2:
+# ## Regressió XGBoost amb G1 i G2:
 
-# In[181]:
+# In[ ]:
 
 
 XGB.fit(X_amb_G_train, y_amb_G_train)
 
 
-# In[182]:
+# In[ ]:
 
 
 Pred_XGB_amb_G = XGB.predict(X_amb_G_test)
 
 
-# In[191]:
+# In[ ]:
 
 
 # Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
@@ -980,11 +993,95 @@ Dic_r2_Sense_G['XGB'] = r2_XGB_sense_G
 Dic_r2_Amb_G['XGB'] = r2_XGB_amb_G
 
 
-# In[220]:
+# In[ ]:
 
 
 print("Model amb MSE més baix sense G1 ni G2: ", min(Dic_MSE_Sense_G, key=Dic_MSE_Sense_G.get), "---->",Dic_MSE_Sense_G[min(Dic_MSE_Sense_G, key=Dic_MSE_Sense_G.get)] )
 print("Model amb r2 score més alta sense G1 ni G2: ", max(Dic_r2_Sense_G, key=Dic_r2_Sense_G.get), "---->",Dic_r2_Sense_G[max(Dic_r2_Sense_G, key=Dic_r2_Sense_G.get)] )
 print("Model amb MSE més baix amb G1 i G2: ", min(Dic_MSE_Amb_G, key=Dic_MSE_Amb_G.get), "---->",Dic_MSE_Amb_G[min(Dic_MSE_Amb_G, key=Dic_MSE_Amb_G.get)])
 print("Model amb r2 score més alta amb G1 i G2: ", max(Dic_r2_Amb_G, key=Dic_r2_Amb_G.get), "---->",Dic_r2_Amb_G[max(Dic_r2_Amb_G, key=Dic_r2_Amb_G.get)])
+
+
+# # Cross-Validation:
+
+# In[ ]:
+
+
+X_sense_G_cross = Dataset_canvis.copy()
+X_sense_G_cross = X_sense_G_cross.drop(['G1','G2','G3'], axis=1)
+X_sense_G_cross = StandardScaler().fit_transform(X_sense_G_cross)
+
+X_amb_G_cross = Dataset_canvis.copy()
+X_amb_G_cross = X_amb_G_cross.drop(['G3'], axis=1)
+X_amb_G_cross = StandardScaler().fit_transform(X_amb_G_cross)
+
+y_cross = Dataset_canvis.copy()
+y_cross = y_cross[['G3']]
+
+
+# ## CV sense G1 ni G2:
+
+# In[ ]:
+
+
+SS_3 = ShuffleSplit(n_splits = 3, test_size = 0.3, random_state = 0)
+SS_5 = ShuffleSplit(n_splits = 5, test_size = 0.3, random_state = 0)
+SS_10 = ShuffleSplit(n_splits = 10, test_size = 0.3, random_state = 0)
+
+KF_3 = KFold(n_splits = 3)
+KF_5 = KFold(n_splits = 5)
+KF_10 = KFold(n_splits = 10)
+
+loo = LeaveOneOut()
+
+
+# ### Regressió linial (3, 5 i 10 folds):
+
+# In[ ]:
+
+
+scores3_LinReg = cross_val_score(LinReg, X_sense_G_cross, y_cross.values.ravel(), cv=SS_3, scoring='neg_mean_absolute_error')
+print('neg_mean_absolute_error mitjà = %.3f amb desviació estàndard = %.3f' % (np.mean(scores3_LinReg), np.std(scores3_LinReg)))
+
+
+# In[ ]:
+
+
+scores5_LinReg = cross_val_score(LinReg, X_sense_G_cross, y_cross.values.ravel(), cv=SS_5, scoring='neg_mean_absolute_error')
+print('neg_mean_absolute_error mitjà = %.3f amb desviació estàndard = %.3f' % (np.mean(scores5_LinReg), np.std(scores5_LinReg)))
+
+
+# In[ ]:
+
+
+scores10_LinReg = cross_val_score(LinReg, X_sense_G_cross, y_cross.values.ravel(), cv=SS_10, scoring='neg_mean_absolute_error')
+print('neg_mean_absolute_error mitjà = %.3f amb desviació estàndard = %.3f' % (np.mean(scores10_LinReg), np.std(scores10_LinReg)))
+
+
+# In[ ]:
+
+
+scores3_LinReg = cross_val_score(LinReg, X_sense_G_cross, y_cross.values.ravel(), cv=KF_3, scoring='neg_mean_absolute_error')
+print('neg_mean_absolute_error mitjà = %.3f amb desviació estàndard = %.3f' % (np.mean(scores3_LinReg), np.std(scores3_LinReg)))
+
+
+# In[ ]:
+
+
+scores5_LinReg = cross_val_score(LinReg, X_sense_G_cross, y_cross.values.ravel(), cv=KF_5, scoring='neg_mean_absolute_error')
+print('neg_mean_absolute_error mitjà = %.3f amb desviació estàndard = %.3f' % (np.mean(scores5_LinReg), np.std(scores5_LinReg)))
+
+
+# In[ ]:
+
+
+scores10_LinReg = cross_val_score(LinReg, X_sense_G_cross, y_cross.values.ravel(), cv=KF_10, scoring='neg_mean_absolute_error')
+print('neg_mean_absolute_error mitjà = %.3f amb desviació estàndard = %.3f' % (np.mean(scores10_LinReg), np.std(scores10_LinReg)))
+
+
+# In[ ]:
+
+
+scoresloo_LinReg = cross_val_score(LinReg, X_sense_G_cross, y_cross.values.ravel(), cv=loo, scoring='neg_mean_absolute_error')
+print('neg_mean_absolute_error mitjà = %.3f amb desviació estàndard = %.3f' % (np.mean(scoresloo_LinReg), np.std(scoresloo_LinReg)))
 
