@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[161]:
 
 
 import math
@@ -10,19 +10,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from sklearn.svm import SVR
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, normalize 
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import Lasso, LinearRegression
+from sklearn.linear_model import Lasso, LinearRegression, BayesianRidge
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import cross_val_predict,GridSearchCV,StratifiedKFold,LeaveOneOut,cross_val_score,train_test_split
 from sklearn.feature_selection import RFECV
+from catboost import CatBoostRegressor
+from xgboost.sklearn import XGBRegressor
 import time
 #from bayes_opt import BayesianOptimization, UtilityFunction
 
 # import some data to play with
-dataset = pd.read_csv("C:/Users/Usuario/OneDrive/Escritorio/student-mat.csv", header=0, delimiter=',')
+dataset = pd.read_csv("/home/pau/Desktop/Tercer Curs/Primer Semestre/AComp/Cas_Kaggle/student-mat.csv", header=0, delimiter=',')
 
 
 # In[2]:
@@ -616,6 +619,16 @@ cerca_params_rf = GridSearchCV(rf, grid_param, cv=5, n_jobs=-1, scoring = "neg_m
 
 # ## Regressions:
 
+# In[184]:
+
+
+Dic_MSE_Sense_G = {}
+Dic_MSE_Amb_G = {}
+
+Dic_r2_Sense_G = {}
+Dic_r2_Amb_G = {}
+
+
 # In[82]:
 
 
@@ -662,22 +675,6 @@ LinReg.fit(X_sense_G_train, y_sense_G_train)
 Pred_LinReg_sense_G = LinReg.predict(X_sense_G_test)
 
 
-# In[89]:
-
-
-# Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
-plt.figure()
-ax = plt.scatter(y_sense_G_test, Pred_LinReg_sense_G)
-plt.ylabel("Valors predits")
-plt.xlabel("Valors reals")
-# Mostrem l'error (MSE i R2)
-MSE_LinReg_sense_G = mean_squared_error(y_sense_G_test, Pred_LinReg_sense_G)
-r2_LinReg_sense_G = r2_score(y_sense_G_test, Pred_LinReg_sense_G)
-
-print("Mean squeared error: ", MSE_LinReg_sense_G)
-print("R2 score: ", r2_LinReg_sense_G)
-
-
 # ### Regressió linial amb G1 i G2:
 
 # In[90]:
@@ -692,18 +689,302 @@ LinReg.fit(X_amb_G_train, y_amb_G_train)
 Pred_LinReg_amb_G = LinReg.predict(X_amb_G_test)
 
 
-# In[92]:
+# In[185]:
 
 
 # Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
 plt.figure()
-ax = plt.scatter(y_amb_G_test, Pred_LinReg_amb_G)
+ax = sns.regplot(x = y_sense_G_test,y = Pred_LinReg_sense_G, fit_reg=True, color = 'green')#plt.scatter(y_sense_G_test, Pred_CBR_sense_G)
+ax2 = sns.regplot(x = y_amb_G_test,y = Pred_LinReg_amb_G, fit_reg=True, color = 'red')
 plt.ylabel("Valors predits")
 plt.xlabel("Valors reals")
+plt.title("Linear Regression")
 # Mostrem l'error (MSE i R2)
+MSE_LinReg_sense_G = mean_squared_error(y_sense_G_test, Pred_LinReg_sense_G)
 MSE_LinReg_amb_G = mean_squared_error(y_amb_G_test, Pred_LinReg_amb_G)
+
+r2_LinReg_sense_G = r2_score(y_sense_G_test, Pred_LinReg_sense_G)
 r2_LinReg_amb_G = r2_score(y_amb_G_test, Pred_LinReg_amb_G)
 
-print("Mean squeared error: ", MSE_LinReg_amb_G)
-print("R2 score: ", r2_LinReg_amb_G)
+
+print("Mean squeared error sense G1 ni G2: ", MSE_LinReg_sense_G)
+print("Mean squeared error amb G1 i G2: ", MSE_LinReg_amb_G)
+
+print("R2 score sense G1 ni G2: ", r2_LinReg_sense_G)
+print("R2 score amb G1 i G2: ", r2_LinReg_amb_G)
+
+Dic_MSE_Sense_G['LinReg'] = MSE_LinReg_sense_G
+Dic_MSE_Amb_G['LinReg'] = MSE_LinReg_amb_G
+
+Dic_r2_Sense_G['LinReg'] = r2_LinReg_sense_G
+Dic_r2_Amb_G['LinReg'] = r2_LinReg_amb_G
+
+
+# ### SVR sense G1 i G2:
+
+# In[94]:
+
+
+Svr = SVR()
+
+
+# In[97]:
+
+
+Svr.fit(X_sense_G_train, y_sense_G_train.values.ravel())
+
+
+# In[99]:
+
+
+Pred_SVR_sense_G = Svr.predict(X_sense_G_test)
+
+
+# ### SVR amb G1 i G2:
+
+# In[105]:
+
+
+Svr.fit(X_amb_G_train, y_amb_G_train.values.ravel())
+
+
+# In[106]:
+
+
+Pred_SVR_amb_G = Svr.predict(X_amb_G_test)
+
+
+# In[186]:
+
+
+# Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
+plt.figure()
+ax = sns.regplot(x = y_sense_G_test,y = Pred_SVR_sense_G, fit_reg=True, color = 'green')#plt.scatter(y_sense_G_test, Pred_CBR_sense_G)
+ax2 = sns.regplot(x = y_amb_G_test,y = Pred_SVR_amb_G, fit_reg=True, color = 'red')
+plt.ylabel("Valors predits")
+plt.xlabel("Valors reals")
+plt.title("SVR")
+# Mostrem l'error (MSE i R2)
+MSE_SVR_sense_G = mean_squared_error(y_sense_G_test, Pred_SVR_sense_G)
+MSE_SVR_amb_G = mean_squared_error(y_amb_G_test, Pred_SVR_amb_G)
+
+r2_SVR_sense_G = r2_score(y_sense_G_test, Pred_SVR_sense_G)
+r2_SVR_amb_G = r2_score(y_amb_G_test, Pred_SVR_amb_G)
+
+
+print("Mean squeared error sense G1 ni G2: ", MSE_SVR_sense_G)
+print("Mean squeared error amb G1 i G2: ", MSE_SVR_amb_G)
+
+print("R2 score sense G1 ni G2: ", r2_SVR_sense_G)
+print("R2 score amb G1 i G2: ", r2_SVR_amb_G)
+
+Dic_MSE_Sense_G['SVR'] = MSE_SVR_sense_G
+Dic_MSE_Amb_G['SVR'] = MSE_SVR_amb_G
+
+Dic_r2_Sense_G['SVR'] = r2_SVR_sense_G
+Dic_r2_Amb_G['SVR'] = r2_SVR_amb_G
+
+
+# ### BayesianRidge sense G1 i G2:
+
+# In[110]:
+
+
+BR = BayesianRidge()
+
+
+# In[112]:
+
+
+BR.fit(X_sense_G_train, y_sense_G_train.values.ravel())
+
+
+# In[113]:
+
+
+Pred_BR_sense_G = BR.predict(X_sense_G_test)
+
+
+# ### BayesianRidge amb G1 i G2:
+
+# In[115]:
+
+
+BR.fit(X_amb_G_train, y_amb_G_train.values.ravel())
+
+
+# In[116]:
+
+
+Pred_BR_amb_G = BR.predict(X_amb_G_test)
+
+
+# In[187]:
+
+
+# Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
+plt.figure()
+ax = sns.regplot(x = y_sense_G_test,y = Pred_BR_sense_G, fit_reg=True, color = 'green')#plt.scatter(y_sense_G_test, Pred_CBR_sense_G)
+ax2 = sns.regplot(x = y_amb_G_test,y = Pred_BR_amb_G, fit_reg=True, color = 'red')
+plt.ylabel("Valors predits")
+plt.xlabel("Valors reals")
+plt.title("BayesianRidge")
+# Mostrem l'error (MSE i R2)
+MSE_BR_sense_G = mean_squared_error(y_sense_G_test, Pred_BR_sense_G)
+MSE_BR_amb_G = mean_squared_error(y_amb_G_test, Pred_BR_amb_G)
+
+r2_BR_sense_G = r2_score(y_sense_G_test, Pred_BR_sense_G)
+r2_BR_amb_G = r2_score(y_amb_G_test, Pred_BR_amb_G)
+
+
+print("Mean squeared error sense G1 ni G2: ", MSE_BR_sense_G)
+print("Mean squeared error amb G1 i G2: ", MSE_BR_amb_G)
+
+print("R2 score sense G1 ni G2: ", r2_BR_sense_G)
+print("R2 score amb G1 i G2: ", r2_BR_amb_G)
+
+Dic_MSE_Sense_G['BR'] = MSE_BR_sense_G
+Dic_MSE_Amb_G['BR'] = MSE_BR_amb_G
+
+Dic_r2_Sense_G['BR'] = r2_BR_sense_G
+Dic_r2_Amb_G['BR'] = r2_BR_amb_G
+
+
+# ### Regressió CatBoost sense G1 i G2:
+
+# In[119]:
+
+
+CBR = CatBoostRegressor()
+
+
+# In[123]:
+
+
+CBR.fit(X_sense_G_train, y_sense_G_train.values.ravel(), verbose = False)
+
+
+# In[124]:
+
+
+Pred_CBR_sense_G = CBR.predict(X_sense_G_test)
+
+
+# ### Regressió CatBoost amb G1 i G2:
+
+# In[136]:
+
+
+CBR.fit(X_amb_G_train, y_amb_G_train.values.ravel(), verbose = False)
+
+
+# In[137]:
+
+
+Pred_CBR_amb_G = CBR.predict(X_amb_G_test)
+
+
+# In[188]:
+
+
+# Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
+plt.figure()
+ax = sns.regplot(x = y_sense_G_test,y = Pred_CBR_sense_G, fit_reg=True, color = 'green')#plt.scatter(y_sense_G_test, Pred_CBR_sense_G)
+ax2 = sns.regplot(x = y_amb_G_test,y = Pred_CBR_amb_G, fit_reg=True, color = 'red')
+plt.ylabel("Valors predits")
+plt.xlabel("Valors reals")
+plt.title("CatBoostRegressor")
+# Mostrem l'error (MSE i R2)
+MSE_CBR_sense_G = mean_squared_error(y_sense_G_test, Pred_CBR_sense_G)
+MSE_CBR_amb_G = mean_squared_error(y_amb_G_test, Pred_CBR_amb_G)
+
+r2_CBR_sense_G = r2_score(y_sense_G_test, Pred_CBR_sense_G)
+r2_CBR_amb_G = r2_score(y_amb_G_test, Pred_CBR_amb_G)
+
+
+print("Mean squeared error sense G1 ni G2: ", MSE_CBR_sense_G)
+print("Mean squeared error amb G1 i G2: ", MSE_CBR_amb_G)
+
+print("R2 score sense G1 ni G2: ", r2_CBR_sense_G)
+print("R2 score amb G1 i G2: ", r2_CBR_amb_G)
+
+Dic_MSE_Sense_G['CBR'] = MSE_CBR_sense_G
+Dic_MSE_Amb_G['CBR'] = MSE_CBR_amb_G
+
+Dic_r2_Sense_G['CBR'] = r2_CBR_sense_G
+Dic_r2_Amb_G['CBR'] = r2_CBR_amb_G
+
+
+# ### Regressió XGBoost sense G1 i G2:
+
+# In[178]:
+
+
+XGB = XGBRegressor()
+
+
+# In[179]:
+
+
+XGB.fit(X_sense_G_train, y_sense_G_train)
+
+
+# In[180]:
+
+
+Pred_XGB_sense_G = XGB.predict(X_sense_G_test)
+
+
+# ### Regressió XGBoost amb G1 i G2:
+
+# In[181]:
+
+
+XGB.fit(X_amb_G_train, y_amb_G_train)
+
+
+# In[182]:
+
+
+Pred_XGB_amb_G = XGB.predict(X_amb_G_test)
+
+
+# In[191]:
+
+
+# Mostrem la predicció del model entrenat en color vermell a la Figura anterior 1
+plt.figure()
+ax = sns.regplot(x = y_sense_G_test,y = Pred_XGB_sense_G, fit_reg=True, color = 'green')#plt.scatter(y_sense_G_test, Pred_CBR_sense_G)
+ax2 = sns.regplot(x = y_amb_G_test,y = Pred_XGB_amb_G, fit_reg=True, color = 'red')
+plt.ylabel("Valors predits")
+plt.xlabel("Valors reals")
+plt.title("XGBoost Regressor")
+# Mostrem l'error (MSE i R2)
+MSE_XGB_sense_G = mean_squared_error(y_sense_G_test, Pred_XGB_sense_G)
+MSE_XGB_amb_G = mean_squared_error(y_amb_G_test, Pred_XGB_amb_G)
+
+r2_XGB_sense_G = r2_score(y_sense_G_test, Pred_XGB_sense_G)
+r2_XGB_amb_G = r2_score(y_amb_G_test, Pred_XGB_amb_G)
+
+
+print("Mean squeared error sense G1 ni G2: ", MSE_XGB_sense_G)
+print("Mean squeared error amb G1 i G2: ", MSE_XGB_amb_G)
+
+print("R2 score sense G1 ni G2: ", r2_XGB_sense_G)
+print("R2 score amb G1 i G2: ", r2_XGB_amb_G)
+
+Dic_MSE_Sense_G['XGB'] = MSE_XGB_sense_G
+Dic_MSE_Amb_G['XGB'] = MSE_XGB_amb_G
+
+Dic_r2_Sense_G['XGB'] = r2_XGB_sense_G
+Dic_r2_Amb_G['XGB'] = r2_XGB_amb_G
+
+
+# In[220]:
+
+
+print("Model amb MSE més baix sense G1 ni G2: ", min(Dic_MSE_Sense_G, key=Dic_MSE_Sense_G.get), "---->",Dic_MSE_Sense_G[min(Dic_MSE_Sense_G, key=Dic_MSE_Sense_G.get)] )
+print("Model amb r2 score més alta sense G1 ni G2: ", max(Dic_r2_Sense_G, key=Dic_r2_Sense_G.get), "---->",Dic_r2_Sense_G[max(Dic_r2_Sense_G, key=Dic_r2_Sense_G.get)] )
+print("Model amb MSE més baix amb G1 i G2: ", min(Dic_MSE_Amb_G, key=Dic_MSE_Amb_G.get), "---->",Dic_MSE_Amb_G[min(Dic_MSE_Amb_G, key=Dic_MSE_Amb_G.get)])
+print("Model amb r2 score més alta amb G1 i G2: ", max(Dic_r2_Amb_G, key=Dic_r2_Amb_G.get), "---->",Dic_r2_Amb_G[max(Dic_r2_Amb_G, key=Dic_r2_Amb_G.get)])
 
